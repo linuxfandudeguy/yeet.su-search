@@ -1,0 +1,52 @@
+name: Subdomain Enumeration + JSON Fingerprinting
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scan-domains:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y amass dnsutils ruby jq curl
+          sudo gem install whatweb
+
+      - name: Run Amass enum
+        run: |
+          mkdir -p results
+          amass enum -d yeet.su -o results/amass.txt
+
+      - name: Generate JSON with dig + WhatWeb
+        run: |
+          mkdir -p results
+          echo "[" > results/final_results.json
+          first=true
+          while read sub; do
+            [[ "$first" == true ]] && first=false || echo "," >> results/final_results.json
+
+            # Get IPs in JSON array
+            ips=$(dig "$sub" +short | jq -R -s -c 'split("\n")[:-1]')
+
+            # Run WhatWeb and convert to JSON
+            whatweb_json=$(whatweb -v --log-json "$sub" 2>/dev/null | jq -s .)
+
+            # Merge into single object
+            jq -n \
+              --arg subdomain "$sub" \
+              --argjson ips "$ips" \
+              --argjson whatweb "$whatweb_json" \
+              '{subdomain: $subdomain, ips: $ips, whatweb: $whatweb}' \
+              >> results/final_results.json
+          done < results/amass.txt
+          echo "]" >> results/final_results.json
+
+      - name: Upload results as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: yeet-su-subdomains-json
+          path: results/final_results.json
