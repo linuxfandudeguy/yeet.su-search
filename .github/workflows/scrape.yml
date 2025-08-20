@@ -1,7 +1,7 @@
 name: Subdomain Enumeration + JSON Fingerprinting
 
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
   scan-domains:
@@ -55,3 +55,4 @@ jobs:
         with:
           name: yeet-su-subdomains-json
           path: results/final_results.json
+
