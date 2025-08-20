@@ -14,7 +14,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y dnsutils ruby jq curl
-          snap install amass
+          sudo snap install amass
           sudo gem install whatweb
 
       - name: Run Amass enum
