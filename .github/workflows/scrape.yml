@@ -13,7 +13,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y amass dnsutils ruby jq curl
+          sudo apt install -y dnsutils ruby jq curl
+          snap install amass
           sudo gem install whatweb
 
       - name: Run Amass enum
